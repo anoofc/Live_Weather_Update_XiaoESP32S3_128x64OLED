@@ -116,8 +116,8 @@ U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
 // -----------------------------
 // Timing
 // -----------------------------
-static constexpr unsigned long FETCH_INTERVAL_MS  = 10UL * 60UL * 1000UL; // refresh every 10 min
-static constexpr unsigned long WIFI_RETRY_MS      = 15000UL;    // retry Wi-Fi every 15 sec
+static constexpr unsigned long FETCH_INTERVAL_MS  = 2UL *60UL * 1000UL; // refresh every 2 min
+static constexpr unsigned long WIFI_RETRY_MS      = 5000UL;    // retry Wi-Fi every 15 sec
 
 // -----------------------------
 // Data model
