@@ -319,24 +319,67 @@ static bool fetchAirData() {
   return true;
 }
 
+static void drawWiFiConnecting(uint8_t dotCount) {
+  u8g2.clearBuffer();
+
+  centerText(18, "WiFi Connecting", u8g2_font_6x12_tf);
+  centerText(38, String("SSID: ") + WIFI_SSID, u8g2_font_6x12_tf);
+
+  String dots;
+  for (uint8_t i = 0; i < dotCount; i++) {
+    dots += ".";
+  }
+  centerText(58, dots, u8g2_font_6x12_tf);
+
+  u8g2.sendBuffer();
+}
+
+static void drawWiFiConnected() {
+  u8g2.clearBuffer();
+
+  centerText(20, "WiFi Connected", u8g2_font_6x12_tf);
+  centerText(42, "IP Address", u8g2_font_6x12_tf);
+  centerText(60, WiFi.localIP().toString(), u8g2_font_6x12_tf);
+
+  u8g2.sendBuffer();
+}
+
+static void drawWiFiReconnecting() {
+  u8g2.clearBuffer();
+
+  centerText(22, "WiFi Unavailable", u8g2_font_6x12_tf);
+  centerText(42, "Reconnecting...", u8g2_font_6x12_tf);
+  centerText(60, String("SSID: ") + WIFI_SSID, u8g2_font_6x12_tf);
+
+  u8g2.sendBuffer();
+}
+
 static void connectWiFi() {
   WiFi.mode(WIFI_STA);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
   Serial.printf("Connecting to Wi-Fi: %s", WIFI_SSID);
+  drawWiFiConnecting(1);
 
   unsigned long start = millis();
+  uint8_t dotCount = 1;
   while (WiFi.status() != WL_CONNECTED && (millis() - start) < 20000UL) {
     delay(250);
     Serial.print(".");
+
+    dotCount = (dotCount % 3) + 1;
+    drawWiFiConnecting(dotCount);
   }
   Serial.println();
 
   if (WiFi.status() == WL_CONNECTED) {
     Serial.print("Wi-Fi connected. IP: ");
     Serial.println(WiFi.localIP());
+    drawWiFiConnected();
+    delay(2000);
   } else {
     Serial.println("Wi-Fi connect timeout");
+    drawWiFiReconnecting();
   }
 }
 
@@ -640,7 +683,12 @@ void setup() {
   currentScreen = SCREEN_DASHBOARD;
   screenTimer = millis();
 
-  drawCurrentScreen();
+  if (WiFi.status() == WL_CONNECTED) {
+    drawCurrentScreen();
+  } else {
+    lastWiFiRetryMs = millis();
+    drawWiFiReconnecting();
+  }
 }
 
 
@@ -652,9 +700,11 @@ void loop()
     if (WiFi.status() != WL_CONNECTED &&
         (now - lastWiFiRetryMs) >= WIFI_RETRY_MS)
     {
-        lastWiFiRetryMs = now;
-
         connectWiFi();
+
+        // Start the retry delay after the blocking connection attempt ends so
+        // the reconnecting message remains readable between attempts.
+        lastWiFiRetryMs = millis();
 
         if (WiFi.status() == WL_CONNECTED)
         {
@@ -663,6 +713,18 @@ void loop()
 
             drawCurrentScreen();
         }
+        else
+        {
+            drawWiFiReconnecting();
+        }
+    }
+
+    // Keep the Wi-Fi status UI visible while offline. This prevents the
+    // dashboard and rotating weather pages from replacing it between retries.
+    if (WiFi.status() != WL_CONNECTED)
+    {
+        delay(5);
+        return;
     }
 
     // Periodic weather refresh
