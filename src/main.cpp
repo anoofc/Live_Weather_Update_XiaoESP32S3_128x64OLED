@@ -488,7 +488,7 @@ void drawHumidity()
     String hum =
         String((int)gData.humidity);
 
-    u8g2.drawStr(10, 50, hum.c_str());
+    u8g2.drawStr(30, 50, hum.c_str());
 
     
     u8g2.setFont(u8g2_font_7x14_tf);
@@ -511,7 +511,7 @@ void drawAQI()
     String aqi =
         String((int)gData.aqi);
 
-    u8g2.drawStr(15, 40, aqi.c_str());
+    u8g2.drawStr(35, 40, aqi.c_str());
 
     u8g2.setFont(u8g2_font_6x12_tf);
 
@@ -540,7 +540,7 @@ void drawWind()
     String speed =
         String(gData.windSpeed,1);
 
-    u8g2.drawStr(5, 36, speed.c_str());
+    u8g2.drawStr(35, 36, speed.c_str());
 
     
     u8g2.setFont(u8g2_font_6x12_tf);
